@@ -1,27 +1,31 @@
-{ pkgs, lib, inputs, ... }:
+{ pkgs, lib, config, inputs, ... }:
 
 {
-  nix.settings = {
-    experimental-features = [ "nix-command" "flakes" ];
-    auto-optimise-store = true;
-    cores = 0;
-    max-jobs = "auto";
-  };
+  options = {
+      modules.core.boot = {
+        enable = lib.mkEnableOption "Custom boot configuration";
+        nvidia.enable = lib.mkEnableOption "Nvidia specific kernel parameters";
+      };
+    };
 
-  # --- Secure Boot ---
-  boot.loader.systemd-boot.enable = lib.mkForce false;
-  boot.lanzaboote = {
-    enable = true;
-    pkiBundle = "/var/lib/sbctl";
-  };
-  boot.loader.efi.canTouchEfiVariables = true;
+  config = lib.mkIf config.modules.core.boot.enable {
+    nix.settings = {
+      experimental-features = [ "nix-command" "flakes" ];
+      auto-optimise-store = true;
+      cores = 0;
+      max-jobs = "auto";
+    };
 
-  # --- Kernel Params ---
-  boot.kernelParams = [
-    # --- Graphics ---
-      "nvidia-drm.modeset=1"
-      "nvidia-drm.fbdev=1"
+    # --- Secure Boot ---
+    boot.loader.systemd-boot.enable = lib.mkForce false;
+    boot.lanzaboote = {
+      enable = true;
+      pkiBundle = "/var/lib/sbctl";
+    };
+    boot.loader.efi.canTouchEfiVariables = true;
 
+    # --- Kernel Params ---
+    boot.kernelParams = [
       # --- CPU Optimization ---
       "amd_pstate=active"                    # Let the CPU manage its own frequency
       "amd_pstate.epp=performance"
@@ -34,85 +38,81 @@
       "transparent_hugepage=madvise"         # Faster memory pages for large assets on request
       "tsc=reliable"                         # to improve cross-system latency
       "clocksource=tsc"                      # in conjunction with above
-  ];
+    ] ++ lib.optionals config.modules.core.boot.nvidia.enable [
+      # --- Graphics ---
+      "nvidia-drm.modeset=1"
+      "nvidia-drm.fbdev=1"
+    ];
 
-  powerManagement.cpuFreqGovernor = "performance";
+    powerManagement.cpuFreqGovernor = "performance";
 
-  # --- Memory Management & Compression ---
-  # Dynamic RAM disk for tempfiles, remove/reduce for systems with less RAM.
-  # Saves on SSD writes.
-  boot.tmp = {
-    useTmpfs = true;
-    tmpfsSize = "67%"; # ~64GB before compression
+    # --- Memory Management & Compression ---
+    # Dynamic RAM disk for tempfiles, remove/reduce for systems with less RAM.
+    # Saves on SSD writes.
+    boot.tmp = {
+      useTmpfs = true;
+      tmpfsSize = "67%"; # ~64GB before compression
+    };
+
+    # zstd hits a 1:3 ratio, lz4 hits 1:2 with better performance.
+    # For my system:
+    # zstd: 96->~192gb @ ~3-5% potential penalty
+    # lz4: 96->~144gb @ ~0.5-1.5% potential penalty
+    # Find what works best for your needs.
+    zramSwap = {
+      enable = true;
+      algorithm = "lz4";
+      memoryPercent = 100;
+    };
+
+    boot.kernel.sysctl = {
+      "vm.swappiness" = 180;             # zram is fast
+      "vm.vfs_cache_pressure" = 50;      # Hold onto metadata longer
+      "vm.compaction_proactiveness" = 0; # remove for servers, reduces random cpu spikes from memory defragmentation.
+      "vm.watermark_boost_factor" = 0;
+      "vm.watermark_scale_factor" = 125;
+      "vm.page_lock_unfairness" = 1;     # tldr, improves system latency
+      # networking
+      "net.core.default_qdisc" = "fq";
+      "net.ipv4.tcp_congestion_control" = "bbr";
+      "net.ipv4.tcp_fastopen" = 3; # Speeds up repeated connections
+    };
+    boot.kernelModules = [ "tcp_bbr" ];
+
+    # --- CachyOS LTS compiled locally for native instruction set ---
+    boot.kernelPackages = let
+      # LTS to ensure compatibility with Nvidia 590.xx drivers
+      # Unfortunately LTO breaks the NVIDIA open drivers at the moment
+      baseKernel = inputs.nix-cachyos-kernel.packages.${pkgs.system}.linux-cachyos-lts;
+
+      optimizedKernel = baseKernel.overrideAttrs (old: {
+        modDirVersion = "${old.version}-cachyos-znver5-v4-fixed";
+
+        # Inject Zen 5 Native AVX-512 flags
+        preConfigure = (old.preConfigure or "") + ''
+          export KCFLAGS="-march=native -O3 -pipe"
+          export KCPPFLAGS="-march=native -O3 -pipe"
+        '';
+
+        separateDebugInfo = false;
+      });
+    in
+      pkgs.linuxPackagesFor optimizedKernel;
+
+    # --- AppImage Support ---
+    programs.appimage = {
+      enable = true;
+      binfmt = true;
+    };
+
+    environment.systemPackages = with pkgs; [
+      sbctl # Secure boot management
+    ];
+
+    # --- Reduce Reboot Delays ---
+    systemd.user.extraConfig = ''
+      DefaultTimeoutStopSec=10s
+      DefaultTimeoutStartSec=10s
+    '';
   };
-
-  # zstd hits a 1:3 ratio, lz4 hits 1:2 with better performance.
-  # For my system:
-  # zstd: 96->~192gb @ ~3-5% potential penalty
-  # lz4: 96->~144gb @ ~0.5-1.5% potential penalty
-  # Find what works best for your needs.
-  zramSwap = {
-    enable = true;
-    algorithm = "lz4";
-    memoryPercent = 100;
-  };
-
-  boot.kernel.sysctl = {
-    "vm.swappiness" = 180;             # zram is fast
-    "vm.vfs_cache_pressure" = 50;      # Hold onto metadata longer
-    "vm.compaction_proactiveness" = 0; # remove for servers, reduces random cpu spikes from memory defragmentation.
-    "vm.watermark_boost_factor" = 0;
-    "vm.watermark_scale_factor" = 125;
-    "vm.page_lock_unfairness" = 1;     # tldr, improves system latency
-    # networking
-    "net.core.default_qdisc" = "fq";
-    "net.ipv4.tcp_congestion_control" = "bbr";
-    "net.ipv4.tcp_fastopen" = 3; # Speeds up repeated connections
-  };
-  boot.kernelModules = [ "tcp_bbr" ];
-
-
-  # --- CachyOS LTS compiled locally for native instruction set ---
-  boot.kernelPackages = let
-    # LTS to ensure compatibility with Nvidia 590.xx drivers
-    # Unfortunately LTO breaks the NVIDIA open drivers at the moment
-    baseKernel = inputs.nix-cachyos-kernel.packages.${pkgs.system}.linux-cachyos-lts;
-
-    optimizedKernel = baseKernel.overrideAttrs (old: {
-      modDirVersion = "${old.version}-cachyos-znver5-v4-fixed";
-
-      # Inject Zen 5 Native AVX-512 flags
-      preConfigure = (old.preConfigure or "") + ''
-        export KCFLAGS="-march=native -O3 -pipe"
-        export KCPPFLAGS="-march=native -O3 -pipe"
-      '';
-
-      separateDebugInfo = false;
-    });
-  in
-    pkgs.linuxPackagesFor optimizedKernel;
-
-  # I'm keeping this out for now since it doesn't work 100% with the 9950x3d.
-  # # --- Task Scheduler ---
-  # services.scx = {
-  #   enable = true;
-  #   package = pkgs.scx.full;
-  #   scheduler = "scx_lavd"; # Optimized for latency
-  # };
-
-  # --- AppImage Support ---
-  programs.appimage = {
-    enable = true;
-    binfmt = true;
-  };
-
-  environment.systemPackages = with pkgs; [
-    sbctl # Secure boot management
-  ];
-
-  # --- Reduce Reboot Delays ---
-  systemd.user.extraConfig = ''
-    DefaultTimeoutStopSec=10s
-    DefaultTimeoutStartSec=10s
-  '';
 }

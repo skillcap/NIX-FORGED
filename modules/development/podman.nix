@@ -1,22 +1,30 @@
-{ pkgs, ... }:
+{ pkgs, lib, config, ... }:
 
 {
-  virtualisation.containers.enable = true;
-  virtualisation.podman = {
-    enable = true;
-    dockerCompat = true;
-    defaultNetwork.settings.dns_enabled = true;
+  options = {
+    modules.development.podman = {
+      enable = lib.mkEnableOption "Container management engine.";
+    };
   };
 
-  environment.systemPackages = with pkgs; [
-    podman-compose
-    podman-tui
-  ];
+  config = lib.mkIf config.modules.development.podman.enable {
+    virtualisation.containers.enable = true;
+    virtualisation.podman = {
+      enable = true;
+      dockerCompat = true;
+      defaultNetwork.settings.dns_enabled = true;
+    };
 
-  # Tells Kind to use Podman
-  environment.sessionVariables = {
-    KIND_EXPERIMENTAL_PROVIDER = "podman";
+    environment.systemPackages = with pkgs; [
+      podman-compose
+      podman-tui
+    ];
+
+    # Tells Kind to use Podman
+    environment.sessionVariables = {
+      KIND_EXPERIMENTAL_PROVIDER = "podman";
+    };
+
+    systemd.services."user@".serviceConfig.Delegate = "cpu cpuset io memory pids";
   };
-
-  systemd.services."user@".serviceConfig.Delegate = "cpu cpuset io memory pids";
 }

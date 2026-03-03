@@ -1,22 +1,30 @@
-{ pkgs, ... }:
+{ pkgs, lib, config, ... }:
 
 {
-  programs.fish.enable = true;
-  programs.zsh.enable = true;
+  options = {
+    modules.core.system-cli = {
+      enable = lib.mkEnableOption "System CLI";
+    };
+  };
 
-  environment.systemPackages = with pkgs; [
-    git
-    wget
-    vim
-    ripgrep
-    ripgrep-all
-    bat
-    slurm
-    util-linux
-    zip
-    unzip
-    tree
-    age
-    sops
-  ];
+  config = lib.mkIf config.modules.core.system-cli.enable {
+    programs.fish.enable = true;
+    programs.zsh.enable = true;
+
+    environment.systemPackages = with pkgs; [
+      git
+      wget
+      vim
+      ripgrep
+      ripgrep-all
+      bat
+      slurm
+      util-linux
+      zip
+      unzip
+      tree
+      age
+      sops
+    ];
+  };
 }

@@ -23,6 +23,7 @@
     '';
     shellAbbrs = {
       nrs = "sudo nixos-rebuild switch --flake /etc/nixos#$(hostname)";
+      nrt = "sudo nixos-rebuild test --flake /etc/nixos#$(hostname)";
       nv = "nvim";
       cat = "bat";
       ls = "eza";

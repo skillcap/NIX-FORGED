@@ -4,17 +4,10 @@
   imports = [
     ./hardware-configuration.nix
     ./display.nix
-    ../../modules/core/boot.nix
-    ../../modules/core/fonts.nix
-    ../../modules/core/system-cli.nix
-    ../../modules/desktop/gaming.nix
-    ../../modules/desktop/hyprland-system.nix
-    ../../modules/development/podman.nix
-    ../../modules/hardware/audio.nix
-    ../../modules/hardware/nvidia.nix
-    ../../modules/hardware/RTX-5090-OC.nix
+    ../../modules/default-system.nix
   ];
 
+  modules.hardware.RTX-5090-OC.enable = true;
   nixpkgs.config.allowUnfree = true;
 
   # --- Networking & Time ---
