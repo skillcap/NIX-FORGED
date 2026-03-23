@@ -24,6 +24,9 @@
     };
     boot.loader.efi.canTouchEfiVariables = true;
 
+    # --- reduce generation display time ---
+    boot.loader.timeout = 1;
+
     # --- Kernel Params ---
     boot.kernelParams = [
       # --- CPU Optimization ---
@@ -114,5 +117,11 @@
       DefaultTimeoutStopSec=10s
       DefaultTimeoutStartSec=10s
     '';
+
+    # --- Filesystem optimization ---
+    fileSystems."/".options = [ "discard=async" ];
+
+    # --- DNS ---
+    networking.nameservers = [ "1.1.1.1" "1.0.0.1" ];
   };
 }
