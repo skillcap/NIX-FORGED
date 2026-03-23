@@ -10,7 +10,34 @@
   config = lib.mkIf config.modules.hardware.nvidia.enable {
     # --- Driver & Graphics Support ---
     services.xserver.videoDrivers = ["nvidia"];
-    hardware.graphics.enable = true;
+
+    hardware.graphics = {
+      enable = true;
+      extraPackages = let
+        dxvk-nvapi-reflex-layer = pkgs.stdenv.mkDerivation rec {
+          pname = "dxvk-nvapi-reflex";
+          version = "0.9.1";
+
+          src = pkgs.fetchurl {
+            url = "https://github.com/jp7677/dxvk-nvapi/releases/download/v${version}/dxvk-nvapi-v${version}.tar.gz";
+            hash = "sha256-ZIIsn3QAV+whfEgEJPKL1RmnzpM2HGz7pLP6e9mJUCs=";
+          };
+
+          sourceRoot = ".";
+
+          installPhase = ''
+            mkdir -p $out/lib $out/share/vulkan/implicit_layer.d
+
+            cp layer/libdxvk_nvapi_vkreflex_layer.so $out/lib/
+            cp layer/VkLayer_DXVK_NVAPI_reflex.json $out/share/vulkan/implicit_layer.d/
+
+            sed -i "s|\./libdxvk_nvapi_vkreflex_layer\.so|$out/lib/libdxvk_nvapi_vkreflex_layer.so|g" $out/share/vulkan/implicit_layer.d/VkLayer_DXVK_NVAPI_reflex.json
+          '';
+        };
+      in [
+        dxvk-nvapi-reflex-layer
+      ];
+    };
 
     # --- Nvidia Blackwell Configuration ---
     hardware.nvidia = {
