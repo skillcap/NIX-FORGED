@@ -1,4 +1,4 @@
-{ config, pkgs, ... }:
+{ config, pkgs, inputs, ... }:
 
 let
   shaders_dir = "${pkgs.mpv-shim-default-shaders}/share/mpv-shim-default-shaders/shaders";
@@ -60,16 +60,8 @@ in
   home.file.".config/mpv/shaders/FSRCNNX_x2_8-0-4-1.glsl".source =
   "${shaders_dir}/FSRCNNX_x2_8-0-4-1.glsl";
 
-  # Apple Music player, AppImage
-  xdg.desktopEntries.cider = {
-    name = "Cider";
-    genericName = "Music Player";
-    exec = "appimage-run /home/skill/Applications/Cider.AppImage";
-    terminal = false;
-    categories = [ "Audio" "Music" ];
-  };
-
   home.packages = with pkgs; [
     playerctl
+    (import ./qbz.nix { inherit pkgs; })
   ];
 }
