@@ -12,6 +12,7 @@
 
   # --- GTK Theme ---
   gtk = {
+    gtk4.theme = null;
     enable = true;
     theme = {
       name = "Adwaita-dark";
