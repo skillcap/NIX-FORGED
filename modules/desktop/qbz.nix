@@ -32,6 +32,7 @@ pkgs.rustPlatform.buildRustPackage rec {
     npmHooks.npmConfigHook
     pkg-config
     wrapGAppsHook3
+    autoPatchelfHook
   ];
 
   buildInputs = with pkgs; [
@@ -40,7 +41,10 @@ pkgs.rustPlatform.buildRustPackage rec {
     webkitgtk_4_1
     glib-networking
     libsecret
-    libappindicator-gtk3
+    libayatana-appindicator
+  ];
+
+  runtimeDependencies = with pkgs; [
     libayatana-appindicator
   ];
 
@@ -52,13 +56,5 @@ pkgs.rustPlatform.buildRustPackage rec {
 
   postInstall = ''
     install -Dm644 ${src}/src-tauri/icons/icon.png $out/share/icons/hicolor/512x512/apps/qbz.png
-  '';
-
-  preFixup = ''
-    gappsWrapperArgs+=(
-      --set WEBKIT_DISABLE_DMABUF_RENDERER 1
-      --set WEBKIT_DISABLE_COMPOSITING_MODE 1
-      --prefix LD_LIBRARY_PATH : "${pkgs.lib.makeLibraryPath [ pkgs.libappindicator pkgs.libappindicator-gtk3 pkgs.libayatana-appindicator ]}"
-    )
   '';
 }
