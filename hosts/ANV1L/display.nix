@@ -69,4 +69,7 @@
         skip-at-startup
     }
   '';
+  environment.sessionVariables = {
+    PROTON_WAYLAND_MONITOR = "DP-3";
+  };
 }
