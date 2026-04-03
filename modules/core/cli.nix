@@ -25,8 +25,8 @@
       fish_vi_key_bindings
     '';
     shellAbbrs = {
-      nrs = "sudo nixos-rebuild switch --flake /etc/nixos#$(hostname)";
-      nrt = "sudo nixos-rebuild test --flake /etc/nixos#$(hostname)";
+      nrs = "sudo git -C /etc/nixos add . && sudo git -C /etc/nixos status -s && sudo nixos-rebuild switch --flake /etc/nixos#$(hostname)";
+      nrt = "sudo git -C /etc/nixos add . && sudo git -C /etc/nixos status -s && sudo nixos-rebuild test --flake /etc/nixos#$(hostname)";
       nv = "nvim";
       cat = "bat";
       ls = "eza";
