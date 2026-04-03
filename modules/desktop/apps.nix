@@ -7,7 +7,15 @@
     obsidian
     pcmanfm
     vivaldi
-    zed-editor
+    (symlinkJoin {
+      name = "zed-xwayland";
+      paths = [ zed-editor ];
+      buildInputs = [ makeWrapper ];
+      postBuild = ''
+        wrapProgram $out/bin/zeditor \
+          --unset WAYLAND_DISPLAY
+      '';
+    })
     inputs.zen-browser.packages."${pkgs.system}".default
   ];
   programs.zathura = {
