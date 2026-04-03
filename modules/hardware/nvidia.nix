@@ -10,6 +10,9 @@
   config = lib.mkIf config.modules.hardware.nvidia.enable {
     # --- Driver & Graphics Support ---
     services.xserver.videoDrivers = ["nvidia"];
+    services.xserver.deviceSection = ''
+      Option "Coolbits" "31"
+    '';
 
     hardware.graphics = {
       enable = true;
