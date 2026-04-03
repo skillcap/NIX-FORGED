@@ -47,6 +47,9 @@
 
     programs.niri.enable = true; # for DMS Greeter
 
+    services.gnome.gnome-keyring.enable = true;
+    security.pam.services.greetd.enableGnomeKeyring = true;
+
     environment.systemPackages = with pkgs; [
       inputs.dsearch.packages.${pkgs.system}.default
       vulkan-hdr-layer-kwin6
