@@ -36,10 +36,15 @@
     boot.kernelParams = [
       # --- CPU Optimization ---
       "amd_pstate=active"                    # Let the CPU manage its own frequency
-      "amd_pstate.epp=performance"
+      "amd_pstate.epp=performance"           # Bias the CPU toward maximum performance over power savings
       "initcall_blacklist=acpi_cpufreq_init" # Prevent conflicts with old driver
       "nowatchdog"                           # Disable the kernel watchdog
       "nmi_watchdog=0"                       # Disable Non-Maskable Interrupt watchdog
+      "nosoftlockup"                         # Disable soft lockup detector to remove polling jitter
+      "preempt=full"                         # Force kernel to instantly interrupt background tasks
+      "threadirqs"                           # Push hardware interrupts to threads to prevent audio dropouts
+      "skew_tick=1"                          # Offset timer ticks across cores to reduce lock contention
+      "workqueue.power_efficient=false"      # Prevent thread migration across cores to preserve
 
       # --- System Latency ---
       "split_lock_detect=off"                # Prevent stutters in unoptimized software
@@ -48,8 +53,8 @@
       "clocksource=tsc"                      # in conjunction with above
     ] ++ lib.optionals config.modules.core.boot.nvidia.enable [
       # --- Graphics ---
-      "nvidia-drm.modeset=1"
-      "nvidia-drm.fbdev=1"
+      "nvidia-drm.modeset=1"                 # Required for Wayland; enables Direct Rendering Manager mode-setting
+      "nvidia-drm.fbdev=1"                   # Fixes Wayland flickering and high-res TTY consoles on NVIDIA
     ];
 
     powerManagement.cpuFreqGovernor = "performance";
@@ -85,7 +90,7 @@
       "net.ipv4.tcp_congestion_control" = "bbr";
       "net.ipv4.tcp_fastopen" = 3; # Speeds up repeated connections
     };
-    boot.kernelModules = [ "tcp_bbr" ];
+    boot.kernelModules = [ "tcp_bbr" "ntsync" ];
 
     # --- CachyOS LTS compiled locally for native instruction set ---
     boot.kernelPackages = let
