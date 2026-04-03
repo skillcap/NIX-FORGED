@@ -6,7 +6,6 @@
   systemd.user.services.rclone-gdrive = {
     Unit = {
       Description = "rclone mount for Google Drive";
-      After = [ "network-online.target" ];
     };
     Service = {
       Type = "simple";
@@ -16,7 +15,7 @@
       RestartSec = "10s";
     };
     Install = {
-      WantedBy = [ "default.target" ];
+      WantedBy = [ "graphical-session.target" ];
     };
   };
 }
