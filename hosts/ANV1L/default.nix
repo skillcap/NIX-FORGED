@@ -7,6 +7,8 @@
     ../../modules/default-system.nix
   ];
 
+  host.profile = "desktop";
+  modules.core.boot.cpuOptimization = "zen4";
   modules.hardware.RTX-5090-OC.enable = true;
   nixpkgs.config.allowUnfree = true;
 
