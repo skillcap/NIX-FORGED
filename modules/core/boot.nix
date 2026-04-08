@@ -81,7 +81,7 @@ in
           let
             baseKernel = inputs.nix-cachyos-kernel.packages.${pkgs.system}.linux-cachyos-lts;
             optimizedKernel = baseKernel.overrideAttrs (old: {
-              modDirVersion = "${old.version}-cachyos-custom-v4-fixed";
+              modDirVersion = "${old.version}-cachyos-custom";
               preConfigure = (old.preConfigure or "") + ''
                 export KCFLAGS="-march=native -O3 -pipe"
                 export KCPPFLAGS="-march=native -O3 -pipe"
