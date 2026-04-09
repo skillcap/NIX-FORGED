@@ -27,20 +27,23 @@ in
   config = lib.mkIf cfg.enable (lib.mkMerge [
     {
       # --- Base Configuration ---
-      nix.settings = {
-        experimental-features = [ "nix-command" "flakes" ];
-        auto-optimise-store = true;
-        cores = 0;
-        max-jobs = "auto";
-        http-connections = 128;
-        max-substitution-jobs = 128;
-        substituters = [
-          "https://cache.nixos.org?priority=10"
-          "https://attic.xuyh0120.win/lantian" # Precompiled CachyOS Kernel Cache
-        ];
-        trusted-public-keys = [
-          "lantian:EeAUQ+W+6r7EtwnmYjeVwx5kOGEBpjlBfPlzGlTNvHc="
-        ];
+      nix = {
+        package = pkgs.lix;
+        settings = {
+          experimental-features = [ "nix-command" "flakes" ];
+          auto-optimise-store = true;
+          cores = 0;
+          max-jobs = "auto";
+          http-connections = 128;
+          max-substitution-jobs = 128;
+          substituters = [
+            "https://cache.nixos.org?priority=10"
+            "https://attic.xuyh0120.win/lantian" # Precompiled CachyOS Kernel Cache
+          ];
+          trusted-public-keys = [
+            "lantian:EeAUQ+W+6r7EtwnmYjeVwx5kOGEBpjlBfPlzGlTNvHc="
+          ];
+        };
       };
 
       # --- Secure Boot ---
