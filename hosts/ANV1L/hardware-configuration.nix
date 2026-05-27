@@ -13,16 +13,60 @@
   boot.kernelModules = [ "kvm-amd" ];
   boot.extraModulePackages = [ ];
 
-  fileSystems."/" =
-    { device = "/dev/disk/by-uuid/17343121-b40e-4f1d-88eb-9d4be1a49372";
-      fsType = "btrfs";
-    };
+  fileSystems."/" = {
+    device = "/dev/disk/by-uuid/17343121-b40e-4f1d-88eb-9d4be1a49372";
+    fsType = "btrfs";
+    options = [ "discard=async" "ssd" "space_cache=v2" ];
+  };
 
-  fileSystems."/boot" =
-    { device = "/dev/disk/by-uuid/CF46-997C";
+  fileSystems."/boot" = {
+      device = "/dev/disk/by-uuid/CF46-997C";
       fsType = "vfat";
       options = [ "umask=0077" ];
     };
+
+  fileSystems."/mnt/nvme" = {
+      device = "/dev/disk/by-uuid/139bb6cc-c539-40ec-a92d-d7e7d4048f8d";
+      fsType = "btrfs";
+      options = [
+        "discard=async"
+        "ssd"
+        "space_cache=v2"
+      ];
+    };
+
+  fileSystems."/mnt/aux" = {
+    device = "/dev/disk/by-uuid/61111b04-965c-457b-bae5-a15fd6825e85";
+    fsType = "btrfs";
+    options = [
+      "compress-force=zstd:10"
+      "discard=async"
+      "ssd"
+      "space_cache=v2"
+    ];
+  };
+
+  fileSystems."/mnt/ext1" = {
+    device = "/dev/disk/by-uuid/15126982-5b7a-4849-97e1-6593f9ca35df";
+    fsType = "btrfs";
+    options = [
+      "compress=zstd:3"
+      "autodefrag"
+      "nofail"
+      "x-systemd.device-timeout=5s"
+    ];
+  };
+
+  fileSystems."/mnt/ext2" = {
+    device = "/dev/disk/by-uuid/a7bf2fe9-0cf2-4518-841b-65d917fa96df";
+    fsType = "btrfs";
+    options = [
+      "compress=zstd:3"
+      "autodefrag"
+      "nofail"
+      "x-systemd.device-timeout=5s"
+    ];
+  };
 
   swapDevices = [ ];
 
