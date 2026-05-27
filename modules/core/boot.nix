@@ -54,6 +54,9 @@ in
       };
       boot.loader.efi.canTouchEfiVariables = true;
 
+      # --- Systemd Initrd ---
+      boot.initrd.systemd.enable = true;
+
       # --- reduce generation display time ---
       boot.loader.timeout = 1;
 
@@ -74,7 +77,7 @@ in
         "net.ipv4.tcp_congestion_control" = "bbr";
         "net.ipv4.tcp_fastopen" = 3;       # Speeds up repeated connections
       };
-      boot.kernelModules = [ "tcp_bbr" "ntsync" ];
+      boot.kernelModules = [ "tcp_bbr" "ntsync" "sg"];
 
       # --- Dynamic Kernel Selection ---
       boot.kernelPackages =
@@ -82,12 +85,14 @@ in
           pkgs.linuxPackages_hardened
         else if cfg.compileLocally then
           let
-            baseKernel = inputs.nix-cachyos-kernel.packages.${pkgs.system}.linux-cachyos-lts;
+            baseKernel = inputs.nix-cachyos-kernel.packages.${pkgs.system}.linux-cachyos-lts-lto-zen4;
             optimizedKernel = baseKernel.overrideAttrs (old: {
               modDirVersion = "${old.version}-cachyos-custom";
+
+              NIX_ENFORCE_NO_NATIVE = 0;
               preConfigure = (old.preConfigure or "") + ''
-                export KCFLAGS="-march=native -O3 -pipe"
-                export KCPPFLAGS="-march=native -O3 -pipe"
+                export KCFLAGS="$KCFLAGS -march=native -O3 -pipe"
+                export KCPPFLAGS="$KCPPFLAGS -march=native -O3 -pipe"
               '';
               separateDebugInfo = false;
             });
@@ -105,6 +110,9 @@ in
         enable = true;
         binfmt = true;
       };
+      # --- Flatpak Support ---
+      services.flatpak.enable = true;
+      xdg.portal.enable = true;
 
       environment.systemPackages = with pkgs; [
         sbctl # Secure boot management
@@ -117,7 +125,7 @@ in
       '';
 
       # --- Filesystem optimization ---
-      fileSystems."/".options = [ "discard=async" ];
+      fileSystems."/".options = [ "discard=async" ] ++ lib.optionals (config.host.profile != "server") [ "noatime" ];
 
       # --- DNS ---
       networking.nameservers = [ "1.1.1.1" "1.0.0.1" ];
