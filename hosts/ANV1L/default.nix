@@ -28,4 +28,7 @@
   nix.settings.allowed-users = [ "skill" "@wheel" ];
 
   hardware.wooting.enable = true;
+  hardware.steam-hardware.enable = true;
+  hardware.uinput.enable = true;
+  programs.steam.extest.enable = true;
 }
