@@ -11,7 +11,9 @@
   modules.core.boot.cpuOptimization = "zen4";
   modules.core.boot.compileLocally = true;
   modules.hardware.RTX-5090-OC.enable = true;
-  nixpkgs.config.allowUnfree = true;
+  nixpkgs.config = {
+    allowUnfree = true;
+  };
 
   # --- Networking & Time ---
   networking.hostName = "ANV1L";
