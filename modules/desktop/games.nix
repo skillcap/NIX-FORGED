@@ -16,15 +16,39 @@
     })
   ];
 
+  xdg.dataFile."flatpak/overrides/com.hypixel.HytaleLauncher" = {
+    text = ''
+      [Context]
+      shared=ipc;
+      sockets=wayland;
+      devices=all;
+      filesystems=xdg-run/gamemode;
+
+      [Environment]
+      MANGOHUD=1
+      MANGOHUD_CONFIG=position=top-left,toggle_hud=bracketright,fps,frametime,cpu_temp,gpu_temp,vram,ram,core_bars,no_display,fps_limit=173,fps_limit_method=late
+    '';
+  };
+
   xdg.desktopEntries = {
     "osu-lazer-pinned" = {
       name = "osu! (Pinned)";
-      exec = "gamemoderun osu! %u";
+      exec = "gs osu!";
       icon = "osu!";
       terminal = false;
       type = "Application";
       categories = [ "Game" ];
-      comment = "osu! pinned to 3D V-Cache CCD";
+      comment = "osu! pinned to 3D V-Cache CCD with gs environment";
+    };
+
+    "hytale-pinned" = {
+      name = "Hytale (Pinned)";
+      exec = "gs-flatpak flatpak run com.hypixel.HytaleLauncher";
+      icon = "hytale"; # Update with actual icon name if needed
+      terminal = false;
+      type = "Application";
+      categories = [ "Game" ];
+      comment = "Hytale pinned to 3D V-Cache CCD with gs environment";
     };
   };
 }
