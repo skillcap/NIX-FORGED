@@ -23,13 +23,6 @@ in
   programs.mpv = {
     enable = true;
 
-    # Consolidate package overrides
-    package = pkgs.mpv.override {
-      mpv-unwrapped = pkgs.mpv-unwrapped.override {
-        waylandSupport = true;
-      };
-    };
-
     scripts = with pkgs.mpvScripts; [
       uosc           # Modern UI
       mpris          # Media keys
@@ -37,7 +30,6 @@ in
     ];
 
     config = {
-      # 5090 + 175Hz Ultrawide Optimization
       vo = "gpu-next";
       gpu-api = "vulkan";
       hwdec = "nvdec-copy";
@@ -45,14 +37,14 @@ in
       interpolation = "yes";
       tscale = "oversample";
 
-      # HDR & Quality
-      target-colorspace-hint = "yes";
-      target-peak = 1050;
       profile = "high-quality";
       scale = "ewa_lanczossharp";
       cscale = "spline36";
 
-      # Use the ~~ alias to point to the local shaders folder
+      # HDR to SDR Tonemapping
+      tone-mapping = "bt.2446a";
+      hdr-compute-peak = "yes";
+
       glsl-shader = "~~/shaders/FSRCNNX_x2_8-0-4-1.glsl";
     };
   };
@@ -62,6 +54,29 @@ in
 
   home.packages = with pkgs; [
     playerctl
-    (pkgs.callPackage ./qbz.nix { })
+
+    (pkgs.symlinkJoin {
+      name = "qbz-wrapped";
+      paths = [
+        # Your original override block. Nix will grab this straight from the cache.
+        (inputs.qbz.packages.${pkgs.stdenv.hostPlatform.system}.default.overrideAttrs (oldAttrs: {
+          doCheck = false;
+          nativeBuildInputs = (oldAttrs.nativeBuildInputs or []) ++ [ pkgs.jq ];
+          postPatch = (oldAttrs.postPatch or "") + ''
+            for file in src-tauri/tauri.conf.json tauri.conf.json; do
+              if [ -f "$file" ]; then
+                jq '.bundle.createUpdaterArtifacts = false' "$file" > "$file.tmp" && mv "$file.tmp" "$file"
+              fi
+            done
+          '';
+        }))
+      ];
+      nativeBuildInputs = [ pkgs.makeWrapper ];
+      postBuild = ''
+        wrapProgram $out/bin/qbz \
+          --prefix LD_LIBRARY_PATH : "${pkgs.lib.makeLibraryPath [ pkgs.pipewire pkgs.alsa-lib pkgs.libpulseaudio ]}" \
+          --prefix GST_PLUGIN_SYSTEM_PATH_1_0 : "${pkgs.lib.makeSearchPathOutput "lib" "lib/gstreamer-1.0" [ pkgs.gst_all_1.gstreamer pkgs.gst_all_1.gst-plugins-base pkgs.gst_all_1.gst-plugins-good pkgs.pipewire ]}"
+      '';
+    })
   ];
 }
