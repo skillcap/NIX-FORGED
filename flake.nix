@@ -7,6 +7,7 @@
     nix-gaming.url = "github:fufexan/nix-gaming";
     nix-cachyos-kernel.url = "github:xddxdd/nix-cachyos-kernel";
     sops-nix.url = "github:Mic92/sops-nix";
+    qbz.url = "github:vicrodh/qbz";
 
     home-manager = {
       url = "github:nix-community/home-manager";
@@ -76,7 +77,7 @@
         nix-gaming.nixosModules.platformOptimizations
         sops-nix.nixosModules.sops
         dms.nixosModules.dank-material-shell
-	dms.nixosModules.greeter
+        dms.nixosModules.greeter
 
         {
           home-manager.extraSpecialArgs = { inherit inputs; };
