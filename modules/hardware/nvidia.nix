@@ -1,4 +1,4 @@
-{ config, pkgs, lib, ... }:
+{ config, pkgs, lib, inputs, ... }:
 
 {
   options = {
@@ -46,12 +46,20 @@
     hardware.nvidia = {
       open = true;
       package = config.boot.kernelPackages.nvidiaPackages.beta;
+      # package = config.boot.kernelPackages.nvidiaPackages.beta.overrideAttrs (old: {
+      #   patches = (old.patches or []) ++ [
+      #     "${inputs.cachyos-pkgbuilds}/nvidia/nvidia-utils/<TARGET_KERNEL_PATCH>.patch"
+      #   ];
+      # });
       modesetting.enable = true;
       powerManagement.enable = true;
       nvidiaSettings = true;
       powerManagement.finegrained = false; # maybe remove for laptops
     };
-    boot.extraModprobeConfig = "options nvidia NVreg_EnableGpuFirmware=1";
+    boot.extraModprobeConfig = ''
+      options nvidia NVreg_EnableGpuFirmware=1
+      options nvidia NVreg_PreserveVideoMemoryAllocations=1
+    '';
 
     # --- Session & Wayland Variables ---
     environment.sessionVariables = {
