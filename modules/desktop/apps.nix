@@ -5,6 +5,7 @@
     appimage-run
     discord-ptb
     obsidian
+    orca-slicer
     pcmanfm
     vivaldi
     (symlinkJoin {
