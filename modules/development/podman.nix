@@ -18,6 +18,7 @@
     environment.systemPackages = with pkgs; [
       podman-compose
       podman-tui
+      distrobox
     ];
 
     # Tells Kind to use Podman
