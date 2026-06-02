@@ -35,13 +35,6 @@
 
     # DankSearch
     programs.dsearch.enable = true;
-    nixpkgs.overlays = [
-      (final: prev: {
-        dsearch = prev.dsearch.overrideAttrs (old: {
-          vendorHash = "sha256-nvAgDX8dS3ZwAGTdPvNK1/XzlY28/QjRSW8cmqhp9io=";
-        });
-      })
-    ];
 
     # DMS Greeter
     services.displayManager.defaultSession = "hyprland-uwsm";
