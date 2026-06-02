@@ -7,6 +7,7 @@
     obsidian
     orca-slicer
     pcmanfm
+    telegram-desktop
     vivaldi
     (symlinkJoin {
       name = "zed-xwayland";
