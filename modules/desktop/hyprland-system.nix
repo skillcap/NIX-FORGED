@@ -46,6 +46,7 @@
     };
 
     programs.niri.enable = true; # for DMS Greeter
+    programs.nix-ld.enable = true;
 
     services.gnome.gnome-keyring.enable = true;
     security.pam.services.greetd.enableGnomeKeyring = true;

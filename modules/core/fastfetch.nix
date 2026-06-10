@@ -1,14 +1,19 @@
-{ config, pkgs, ... }:
+{ pkgs, ... }:
 
 let
-  nixos-logo-png = pkgs.runCommand "nixos-logo.png" {
-    buildInputs = [ pkgs.imagemagick ];
-  } ''
-    magick -density 1200 -background none ${pkgs.fetchurl {
-      url = "https://raw.githubusercontent.com/NixOS/nixos-artwork/master/logo/nix-snowflake-colours.svg";
-      hash = "sha256-43taHBHoFJbp1GrwSQiVGtprq6pBbWcKquSTTM6RLrI=";
-    }} -resize 1000x1000 $out
-  '';
+  nixos-logo-png =
+    pkgs.runCommand "nixos-logo.png"
+      {
+        buildInputs = [ pkgs.imagemagick ];
+      }
+      ''
+        magick -density 1200 -background none ${
+          pkgs.fetchurl {
+            url = "https://raw.githubusercontent.com/NixOS/nixos-artwork/master/logo/nix-snowflake-colours.svg";
+            hash = "sha256-43taHBHoFJbp1GrwSQiVGtprq6pBbWcKquSTTM6RLrI=";
+          }
+        } -resize 1000x1000 $out
+      '';
 in
 {
   programs.fastfetch = {

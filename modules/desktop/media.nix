@@ -1,4 +1,4 @@
-{ config, pkgs, inputs, ... }:
+{ pkgs, inputs, ... }:
 
 let
   shaders_dir = "${pkgs.mpv-shim-default-shaders}/share/mpv-shim-default-shaders/shaders";
@@ -24,9 +24,9 @@ in
     enable = true;
 
     scripts = with pkgs.mpvScripts; [
-      uosc           # Modern UI
-      mpris          # Media keys
-      sponsorblock   # Skip sponsors
+      uosc # Modern UI
+      mpris # Media keys
+      sponsorblock # Skip sponsors
     ];
 
     config = {
@@ -50,7 +50,7 @@ in
   };
 
   home.file.".config/mpv/shaders/FSRCNNX_x2_8-0-4-1.glsl".source =
-  "${shaders_dir}/FSRCNNX_x2_8-0-4-1.glsl";
+    "${shaders_dir}/FSRCNNX_x2_8-0-4-1.glsl";
 
   home.packages = with pkgs; [
     playerctl
@@ -61,7 +61,7 @@ in
         # Your original override block. Nix will grab this straight from the cache.
         (inputs.qbz.packages.${pkgs.stdenv.hostPlatform.system}.default.overrideAttrs (oldAttrs: {
           doCheck = false;
-          nativeBuildInputs = (oldAttrs.nativeBuildInputs or []) ++ [ pkgs.jq ];
+          nativeBuildInputs = (oldAttrs.nativeBuildInputs or [ ]) ++ [ pkgs.jq ];
           postPatch = (oldAttrs.postPatch or "") + ''
             for file in src-tauri/tauri.conf.json tauri.conf.json; do
               if [ -f "$file" ]; then
@@ -74,8 +74,21 @@ in
       nativeBuildInputs = [ pkgs.makeWrapper ];
       postBuild = ''
         wrapProgram $out/bin/qbz \
-          --prefix LD_LIBRARY_PATH : "${pkgs.lib.makeLibraryPath [ pkgs.pipewire pkgs.alsa-lib pkgs.libpulseaudio ]}" \
-          --prefix GST_PLUGIN_SYSTEM_PATH_1_0 : "${pkgs.lib.makeSearchPathOutput "lib" "lib/gstreamer-1.0" [ pkgs.gst_all_1.gstreamer pkgs.gst_all_1.gst-plugins-base pkgs.gst_all_1.gst-plugins-good pkgs.pipewire ]}"
+          --prefix LD_LIBRARY_PATH : "${
+            pkgs.lib.makeLibraryPath [
+              pkgs.pipewire
+              pkgs.alsa-lib
+              pkgs.libpulseaudio
+            ]
+          }" \
+          --prefix GST_PLUGIN_SYSTEM_PATH_1_0 : "${
+            pkgs.lib.makeSearchPathOutput "lib" "lib/gstreamer-1.0" [
+              pkgs.gst_all_1.gstreamer
+              pkgs.gst_all_1.gst-plugins-base
+              pkgs.gst_all_1.gst-plugins-good
+              pkgs.pipewire
+            ]
+          }"
       '';
     })
   ];

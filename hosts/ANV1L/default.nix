@@ -1,4 +1,4 @@
-{ config, pkgs, ... }:
+{ pkgs, ... }:
 
 {
   imports = [
@@ -24,10 +24,18 @@
   # --- User & Permissions ---
   users.users.skill = {
     isNormalUser = true;
-    extraGroups = [ "wheel" "networkmanager" "video" "audio" ];
+    extraGroups = [
+      "wheel"
+      "networkmanager"
+      "video"
+      "audio"
+    ];
     shell = pkgs.fish;
   };
-  nix.settings.allowed-users = [ "skill" "@wheel" ];
+  nix.settings.allowed-users = [
+    "skill"
+    "@wheel"
+  ];
 
   hardware.wooting.enable = true;
   hardware.steam-hardware.enable = true;

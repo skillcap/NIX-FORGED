@@ -1,4 +1,4 @@
-{ pkgs, config, inputs, ... }:
+{ pkgs, inputs, ... }:
 
 {
   home.packages = [
@@ -9,8 +9,8 @@
         libglvnd
         linuxPackages.nvidia_x11
         stdenv.cc.cc.lib
-        libX11       # Required for Vulkan surface creation
-        wayland           # Required for Hyprland
+        libX11 # Required for Vulkan surface creation
+        wayland # Required for Hyprland
         libxkbcommon
       ];
     })

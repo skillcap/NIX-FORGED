@@ -1,11 +1,11 @@
-{ inputs, pkgs, config, ... }:
+{ inputs, config, ... }:
 
 {
   # --- Secrets Management ---
   imports = [ inputs.sops-nix.homeManagerModules.sops ];
   sops.age.keyFile = "${config.home.homeDirectory}/.config/sops/age/keys.txt";
   sops.secrets = {
-   # "secret_name".sopsFile = ../../secrets/file_name.yaml;
+    # "secret_name".sopsFile = ../../secrets/file_name.yaml;
   };
   # secrets are created via the sops command:
   # 1. Generate a new age key pair and save it to your local config directory.

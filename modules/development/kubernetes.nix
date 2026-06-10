@@ -1,4 +1,4 @@
-{ pkgs, lib, config, ... }:
+{ pkgs, ... }:
 
 {
   home.packages = with pkgs; [
@@ -13,7 +13,7 @@
     stern
   ];
 
-  programs.fish.shellAbbrs  = {
+  programs.fish.shellAbbrs = {
     kind = "systemd-run --scope --user -p Delegate=yes kind";
     k = "kubectl";
     kgp = "kubectl get pods";

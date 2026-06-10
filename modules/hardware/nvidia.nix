@@ -1,4 +1,9 @@
-{ config, pkgs, lib, inputs, ... }:
+{
+  config,
+  pkgs,
+  lib,
+  ...
+}:
 
 {
   options = {
@@ -9,37 +14,39 @@
 
   config = lib.mkIf config.modules.hardware.nvidia.enable {
     # --- Driver & Graphics Support ---
-    services.xserver.videoDrivers = ["nvidia"];
+    services.xserver.videoDrivers = [ "nvidia" ];
     services.xserver.deviceSection = ''
       Option "Coolbits" "31"
     '';
 
     hardware.graphics = {
       enable = true;
-      extraPackages = let
-        dxvk-nvapi-reflex-layer = pkgs.stdenv.mkDerivation rec {
-          pname = "dxvk-nvapi-reflex";
-          version = "0.9.1";
+      extraPackages =
+        let
+          dxvk-nvapi-reflex-layer = pkgs.stdenv.mkDerivation rec {
+            pname = "dxvk-nvapi-reflex";
+            version = "0.9.2";
 
-          src = pkgs.fetchurl {
-            url = "https://github.com/jp7677/dxvk-nvapi/releases/download/v${version}/dxvk-nvapi-v${version}.tar.gz";
-            hash = "sha256-ZIIsn3QAV+whfEgEJPKL1RmnzpM2HGz7pLP6e9mJUCs=";
+            src = pkgs.fetchurl {
+              url = "https://github.com/jp7677/dxvk-nvapi/releases/download/v${version}/dxvk-nvapi-v${version}.tar.gz";
+              sha256 = "60c284223530d643c446c263f1e1a96c6de7b5ff21796219646da734d97a70d6";
+            };
+
+            sourceRoot = ".";
+
+            installPhase = ''
+              mkdir -p $out/lib $out/share/vulkan/implicit_layer.d
+
+              cp layer/libdxvk_nvapi_vkreflex_layer.so $out/lib/
+              cp layer/VkLayer_DXVK_NVAPI_reflex.json $out/share/vulkan/implicit_layer.d/
+
+              sed -i "s|\./libdxvk_nvapi_vkreflex_layer\.so|$out/lib/libdxvk_nvapi_vkreflex_layer.so|g" $out/share/vulkan/implicit_layer.d/VkLayer_DXVK_NVAPI_reflex.json
+            '';
           };
-
-          sourceRoot = ".";
-
-          installPhase = ''
-            mkdir -p $out/lib $out/share/vulkan/implicit_layer.d
-
-            cp layer/libdxvk_nvapi_vkreflex_layer.so $out/lib/
-            cp layer/VkLayer_DXVK_NVAPI_reflex.json $out/share/vulkan/implicit_layer.d/
-
-            sed -i "s|\./libdxvk_nvapi_vkreflex_layer\.so|$out/lib/libdxvk_nvapi_vkreflex_layer.so|g" $out/share/vulkan/implicit_layer.d/VkLayer_DXVK_NVAPI_reflex.json
-          '';
-        };
-      in [
-        dxvk-nvapi-reflex-layer
-      ];
+        in
+        [
+          dxvk-nvapi-reflex-layer
+        ];
     };
 
     # --- Nvidia Blackwell Configuration ---
