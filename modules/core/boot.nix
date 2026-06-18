@@ -142,10 +142,10 @@ in
         ];
 
         # --- Reduce Reboot Delays ---
-        systemd.user.settings.Manager = ''
-          DefaultTimeoutStopSec=10s
-          DefaultTimeoutStartSec=10s
-        '';
+        systemd.user.settings.Manager = {
+          DefaultTimeoutStopSec = "10s";
+          DefaultTimeoutStartSec = "10s";
+        };
 
         # --- Filesystem optimization ---
         fileSystems."/".options = [
