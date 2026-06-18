@@ -15,7 +15,7 @@
     };
 
     lanzaboote = {
-      url = "github:nix-community/lanzaboote/v1.0.0";
+      url = "github:nix-community/lanzaboote";
       inputs.nixpkgs.follows = "nixpkgs";
     };
 
@@ -36,57 +36,71 @@
 
     # A very cool Nvidia OC tool written in Rust.
     nvidia-oc-src = {
-        url = "github:Dreaming-Codes/nvidia_oc";
-        flake = false;
+      url = "github:Dreaming-Codes/nvidia_oc";
+      flake = false;
+    };
+  };
+
+  outputs =
+    {
+      self,
+      nixpkgs,
+      home-manager,
+      lanzaboote,
+      zen-browser,
+      nix-gaming,
+      quickshell,
+      dms,
+      sops-nix,
+      disko,
+      ...
+    }@inputs:
+    {
+      nixosConfigurations."ANV1L" = nixpkgs.lib.nixosSystem {
+        specialArgs = { inherit inputs; };
+        modules = [
+          { nixpkgs.hostPlatform = "x86_64-linux"; }
+          ./hosts/ANV1L/default.nix
+
+          home-manager.nixosModules.home-manager
+          lanzaboote.nixosModules.lanzaboote
+          nix-gaming.nixosModules.platformOptimizations
+          sops-nix.nixosModules.sops
+          dms.nixosModules.dank-material-shell
+          dms.nixosModules.greeter
+
+          {
+            home-manager.extraSpecialArgs = { inherit inputs; };
+            home-manager.useGlobalPkgs = true;
+            home-manager.useUserPackages = true;
+            home-manager.users.skill = import ./home.nix;
+            home-manager.backupFileExtension = "backup";
+          }
+        ];
       };
-  };
 
-  outputs = { self, nixpkgs, home-manager, lanzaboote, zen-browser, nix-gaming, quickshell, dms, sops-nix, disko, ... }@inputs: {
-    nixosConfigurations."ANV1L" = nixpkgs.lib.nixosSystem {
-      specialArgs = { inherit inputs; };
-      modules = [
-        { nixpkgs.hostPlatform = "x86_64-linux"; }
-        ./hosts/ANV1L/default.nix
+      nixosConfigurations."N0M4D" = nixpkgs.lib.nixosSystem {
+        specialArgs = { inherit inputs; };
+        modules = [
+          { nixpkgs.hostPlatform = "x86_64-linux"; }
+          ./hosts/N0M4D/default.nix
 
-        home-manager.nixosModules.home-manager
-        lanzaboote.nixosModules.lanzaboote
-        nix-gaming.nixosModules.platformOptimizations
-        sops-nix.nixosModules.sops
-        dms.nixosModules.dank-material-shell
-        dms.nixosModules.greeter
+          disko.nixosModules.disko
+          home-manager.nixosModules.home-manager
+          lanzaboote.nixosModules.lanzaboote
+          nix-gaming.nixosModules.platformOptimizations
+          sops-nix.nixosModules.sops
+          dms.nixosModules.dank-material-shell
+          dms.nixosModules.greeter
 
-        {
-          home-manager.extraSpecialArgs = { inherit inputs; };
-          home-manager.useGlobalPkgs = true;
-          home-manager.useUserPackages = true;
-          home-manager.users.skill = import ./home.nix;
-          home-manager.backupFileExtension = "backup";
-        }
-      ];
+          {
+            home-manager.extraSpecialArgs = { inherit inputs; };
+            home-manager.useGlobalPkgs = true;
+            home-manager.useUserPackages = true;
+            home-manager.users.skill = import ./home.nix;
+            home-manager.backupFileExtension = "backup";
+          }
+        ];
+      };
     };
-
-    nixosConfigurations."N0M4D" = nixpkgs.lib.nixosSystem {
-      specialArgs = { inherit inputs; };
-      modules = [
-        { nixpkgs.hostPlatform = "x86_64-linux"; }
-        ./hosts/N0M4D/default.nix
-
-        disko.nixosModules.disko
-        home-manager.nixosModules.home-manager
-        lanzaboote.nixosModules.lanzaboote
-        nix-gaming.nixosModules.platformOptimizations
-        sops-nix.nixosModules.sops
-        dms.nixosModules.dank-material-shell
-        dms.nixosModules.greeter
-
-        {
-          home-manager.extraSpecialArgs = { inherit inputs; };
-          home-manager.useGlobalPkgs = true;
-          home-manager.useUserPackages = true;
-          home-manager.users.skill = import ./home.nix;
-          home-manager.backupFileExtension = "backup";
-        }
-      ];
-    };
-  };
 }
