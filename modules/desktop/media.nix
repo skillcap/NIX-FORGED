@@ -58,10 +58,15 @@ in
     (pkgs.symlinkJoin {
       name = "qbz-wrapped";
       paths = [
-        # Your original override block. Nix will grab this straight from the cache.
         (inputs.qbz.packages.${pkgs.stdenv.hostPlatform.system}.default.overrideAttrs (oldAttrs: {
           doCheck = false;
-          nativeBuildInputs = (oldAttrs.nativeBuildInputs or [ ]) ++ [ pkgs.jq ];
+
+          buildInputs = (oldAttrs.buildInputs or [ ]) ++ [ pkgs.libjack2 ];
+          nativeBuildInputs = (oldAttrs.nativeBuildInputs or [ ]) ++ [
+            pkgs.jq
+            pkgs.pkg-config
+          ];
+
           postPatch = (oldAttrs.postPatch or "") + ''
             for file in src-tauri/tauri.conf.json tauri.conf.json; do
               if [ -f "$file" ]; then
@@ -79,6 +84,7 @@ in
               pkgs.pipewire
               pkgs.alsa-lib
               pkgs.libpulseaudio
+              pkgs.libjack2
             ]
           }" \
           --prefix GST_PLUGIN_SYSTEM_PATH_1_0 : "${
