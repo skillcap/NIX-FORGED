@@ -12,11 +12,12 @@
     mold
     rustc
     rusty-man
-    elixir
+    beamPackages.elixir
     beam.packages.erlang.erlang
     nodejs
     python315
     uv
+    talosctl
     tokei
     (lib.lowPrio gcc)
     gnumake
@@ -26,9 +27,9 @@
   ];
 
   xdg.desktopEntries.livebook = {
-      name = "Livebook";
-      genericName = "Elixir runner";
-      exec = "appimage-run /home/skill/Applications/Livebook-linux-amd64.AppImage";
-      terminal = false;
-    };
+    name = "Livebook";
+    genericName = "Elixir runner";
+    exec = "appimage-run /home/skill/Applications/Livebook-linux-amd64.AppImage";
+    terminal = false;
+  };
 }
