@@ -32,13 +32,13 @@
     };
 
     dms.url = "github:AvengeMedia/DankMaterialShell/stable";
+    dank-greeter.url = "github:AvengeMedia/dank-greeter";
     dsearch.url = "github:AvengeMedia/danksearch";
     quickshell = {
       url = "git+https://git.outfoxxed.me/quickshell/quickshell";
       inputs.nixpkgs.follows = "nixpkgs";
     };
 
-    # A very cool Nvidia OC tool written in Rust.
     nvidia-oc-src = {
       url = "github:Dreaming-Codes/nvidia_oc";
       flake = false;
@@ -55,6 +55,7 @@
       nix-gaming,
       quickshell,
       dms,
+      dank-greeter,
       sops-nix,
       disko,
       ...
@@ -71,7 +72,7 @@
           nix-gaming.nixosModules.platformOptimizations
           sops-nix.nixosModules.sops
           dms.nixosModules.dank-material-shell
-          dms.nixosModules.greeter
+          dank-greeter.nixosModules.default
 
           {
             home-manager.extraSpecialArgs = { inherit inputs; };
@@ -95,7 +96,7 @@
           nix-gaming.nixosModules.platformOptimizations
           sops-nix.nixosModules.sops
           dms.nixosModules.dank-material-shell
-          dms.nixosModules.greeter
+          dank-greeter.nixosModules.default
 
           {
             home-manager.extraSpecialArgs = { inherit inputs; };

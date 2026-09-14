@@ -25,12 +25,10 @@
       };
 
       # Core features
-      enableSystemMonitoring = true;
       enableVPN = true;
       enableDynamicTheming = true;
       enableAudioWavelength = true;
       enableCalendarEvents = true;
-      enableClipboardPaste = true;
     };
 
     # DankSearch
@@ -38,7 +36,7 @@
 
     # DMS Greeter
     services.displayManager.defaultSession = "hyprland-uwsm";
-    programs.dank-material-shell.greeter = {
+    programs.dms-greeter = {
       enable = true;
       compositor.name = "niri";
       configHome = "/home/skill";
