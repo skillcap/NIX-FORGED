@@ -1,4 +1,4 @@
-{ pkgs, inputs, ... }:
+{ pkgs, ... }:
 
 let
   shaders_dir = "${pkgs.mpv-shim-default-shaders}/share/mpv-shim-default-shaders/shaders";
@@ -55,47 +55,5 @@ in
   home.packages = with pkgs; [
     playerctl
 
-    (pkgs.symlinkJoin {
-      name = "qbz-wrapped";
-      paths = [
-        (inputs.qbz.packages.${pkgs.stdenv.hostPlatform.system}.default.overrideAttrs (oldAttrs: {
-          doCheck = false;
-
-          buildInputs = (oldAttrs.buildInputs or [ ]) ++ [ pkgs.libjack2 ];
-          nativeBuildInputs = (oldAttrs.nativeBuildInputs or [ ]) ++ [
-            pkgs.jq
-            pkgs.pkg-config
-          ];
-
-          postPatch = (oldAttrs.postPatch or "") + ''
-            for file in src-tauri/tauri.conf.json tauri.conf.json; do
-              if [ -f "$file" ]; then
-                jq '.bundle.createUpdaterArtifacts = false' "$file" > "$file.tmp" && mv "$file.tmp" "$file"
-              fi
-            done
-          '';
-        }))
-      ];
-      nativeBuildInputs = [ pkgs.makeWrapper ];
-      postBuild = ''
-        wrapProgram $out/bin/qbz \
-          --prefix LD_LIBRARY_PATH : "${
-            pkgs.lib.makeLibraryPath [
-              pkgs.pipewire
-              pkgs.alsa-lib
-              pkgs.libpulseaudio
-              pkgs.libjack2
-            ]
-          }" \
-          --prefix GST_PLUGIN_SYSTEM_PATH_1_0 : "${
-            pkgs.lib.makeSearchPathOutput "lib" "lib/gstreamer-1.0" [
-              pkgs.gst_all_1.gstreamer
-              pkgs.gst_all_1.gst-plugins-base
-              pkgs.gst_all_1.gst-plugins-good
-              pkgs.pipewire
-            ]
-          }"
-      '';
-    })
   ];
 }

@@ -8,11 +8,6 @@
     nix-cachyos-kernel.url = "github:xddxdd/nix-cachyos-kernel";
     sops-nix.url = "github:Mic92/sops-nix";
 
-    qbz = {
-      url = "github:vicrodh/qbz";
-      inputs.nixpkgs.follows = "nixpkgs";
-    };
-
     home-manager = {
       url = "github:nix-community/home-manager";
       inputs.nixpkgs.follows = "nixpkgs";
