@@ -140,7 +140,10 @@
     };
   };
 
-  programs.nushell.enable = true;
+  programs.nushell = {
+    enable = true;
+    loadSessionVariables = true;
+  };
 
   home.sessionVariables = {
     EDITOR = "hx";
