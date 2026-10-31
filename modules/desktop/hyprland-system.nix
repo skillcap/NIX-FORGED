@@ -2,11 +2,12 @@
 
 {
   options = {
-      modules.desktop.hyprland-system  = {
-        enable = lib.mkEnableOption "System level configuration for Hyprland";
-      };
+    modules.desktop.hyprland-system = {
+      enable = lib.mkEnableOption "System level configuration for Hyprland";
     };
-    config = lib.mkIf config.modules.desktop.hyprland-system.enable {
+  };
+
+  config = lib.mkIf config.modules.desktop.hyprland-system.enable {
     # --- Desktop ---
     programs.hyprland = {
       enable = true;
@@ -23,12 +24,6 @@
         enable = true;
         restartIfChanged = true;
       };
-
-      # Core features
-      enableVPN = true;
-      enableDynamicTheming = true;
-      enableAudioWavelength = true;
-      enableCalendarEvents = true;
     };
 
     # DankSearch
@@ -46,8 +41,13 @@
     programs.niri.enable = true; # for DMS Greeter
     programs.nix-ld.enable = true;
 
+    # Calendar Backend & Integration Services
+    services.gnome.evolution-data-server.enable = true;
+    services.gnome.gnome-online-accounts.enable = true;
+    programs.dconf.enable = true;
+
     services.gnome.gnome-keyring.enable = true;
-    security.pam.services.greetd.enableGnomeKeyring = true;
+    security.pam.services.greetd.enableGnomeKeyring = false;
 
     environment.systemPackages = with pkgs; [
       dsearch
