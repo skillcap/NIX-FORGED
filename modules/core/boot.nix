@@ -13,6 +13,15 @@ in
   options.modules.core.boot = {
     enable = lib.mkEnableOption "Custom boot configuration";
 
+    kernelBranch = lib.mkOption {
+      type = lib.types.enum [
+        "lts"
+        "latest"
+      ];
+      default = "lts";
+      description = "CachyOS kernel release stream (lts or latest).";
+    };
+
     cpuVendor = lib.mkOption {
       type = lib.types.nullOr (
         lib.types.enum [
@@ -72,11 +81,7 @@ in
           pkiBundle = "/var/lib/sbctl";
         };
         boot.loader.efi.canTouchEfiVariables = true;
-
-        # --- Systemd Initrd ---
-        boot.initrd.systemd.enable = true;
-
-        # --- reduce generation display time ---
+        # boot.initrd.systemd.enable = true;
         boot.loader.timeout = 1;
 
         # --- Base Kernel Params ---
@@ -106,12 +111,19 @@ in
         boot.kernelPackages =
           if config.host.profile == "server" then
             pkgs.linuxPackages_hardened
-          else if cfg.compileLocally then
+          else
             let
-              baseKernel = inputs.nix-cachyos-kernel.packages.${pkgs.system}.linux-cachyos-lts-lto-zen4;
-              optimizedKernel = baseKernel.overrideAttrs (old: {
-                modDirVersion = "${old.version}-cachyos-custom";
+              kernelSuffix =
+                if cfg.cpuOptimization == "generic" then
+                  ""
+                else
+                  "-${cfg.cpuOptimization}";
 
+              rawKernel =
+                inputs.nix-cachyos-kernel.packages.${pkgs.stdenv.hostPlatform.system}."linux-cachyos-${cfg.kernelBranch}${kernelSuffix}";
+
+              optimizedKernel = rawKernel.overrideAttrs (old: {
+                modDirVersion = "${old.version}-cachyos-custom";
                 NIX_ENFORCE_NO_NATIVE = 0;
                 preConfigure = (old.preConfigure or "") + ''
                   export KCFLAGS="$KCFLAGS -march=native -O3 -pipe"
@@ -120,13 +132,7 @@ in
                 separateDebugInfo = false;
               });
             in
-            pkgs.linuxPackagesFor optimizedKernel
-          else if cfg.cpuOptimization == "zen4" then
-            pkgs.linuxPackagesFor inputs.nix-cachyos-kernel.packages.${pkgs.system}.linux-cachyos-lts-zen4
-          else if cfg.cpuOptimization == "zen3" then
-            pkgs.linuxPackagesFor inputs.nix-cachyos-kernel.packages.${pkgs.system}.linux-cachyos-lts-zen3
-          else
-            pkgs.linuxPackagesFor inputs.nix-cachyos-kernel.packages.${pkgs.system}.linux-cachyos-lts;
+            pkgs.linuxPackagesFor (if cfg.compileLocally then optimizedKernel else rawKernel);
 
         # --- AppImage Support ---
         programs.appimage = {
@@ -160,6 +166,23 @@ in
         ];
       }
 
+      # --- Graphics & Out-of-Tree Driver Patching ---
+      (lib.mkIf cfg.hasNvidia {
+        boot.kernelParams = [
+          "nvidia-drm.modeset=1"
+          "nvidia-drm.fbdev=1"
+        ];
+
+        # Apply 7.2 DRM compatibility patch when running latest kernel stream
+        hardware.nvidia.package = lib.mkIf (cfg.kernelBranch == "latest") (
+          config.boot.kernelPackages.nvidiaPackages.open.overrideAttrs (old: {
+            patches = (old.patches or [ ]) ++ [
+              ../../patches/nvidia-kernel-7.2.patch
+            ];
+          })
+        );
+      })
+
       # --- Large Memory Optimizations ---
       (lib.mkIf cfg.largeMemory {
         # --- Memory Management & Compression ---
@@ -186,15 +209,6 @@ in
           "vm.watermark_boost_factor" = 0;
           "vm.watermark_scale_factor" = 125;
         };
-      })
-
-      # --- Graphics ---
-      (lib.mkIf cfg.hasNvidia {
-        boot.kernelParams = [
-          # --- Graphics ---
-          "nvidia-drm.modeset=1" # Required for Wayland; enables Direct Rendering Manager mode-setting
-          "nvidia-drm.fbdev=1" # Fixes Wayland flickering and high-res TTY consoles on NVIDIA
-        ];
       })
 
       # --- CPU Vendor Matching ---
