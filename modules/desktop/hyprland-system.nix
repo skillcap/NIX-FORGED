@@ -15,7 +15,6 @@
       xwayland.enable = true;
     };
 
-    # Dux Shell Ecosystem (renamed from DMS in nixpkgs 26.11)
     programs.dux-shell = {
       enable = true;
       quickshell.package = inputs.quickshell.packages.${pkgs.stdenv.hostPlatform.system}.quickshell;
@@ -26,8 +25,16 @@
       };
     };
 
-    # Dux Search
-    programs.dux-search.enable = true;
+    programs.dux-search = {
+      enable = true;
+    };
+
+    programs.dux-files = {
+      enable = true;
+      systemd.enable = true;
+      portal.enable = true;
+    };
+    xdg.portal.config.common."org.freedesktop.impl.portal.FileChooser" = [ "dfiles" ];
 
     # DMS Greeter
     services.displayManager.defaultSession = "hyprland-uwsm";
@@ -41,16 +48,15 @@
     programs.niri.enable = true; # for DMS Greeter
     programs.nix-ld.enable = true;
 
-    # Calendar Backend & Integration Services
-    services.gnome.evolution-data-server.enable = true;
-    services.gnome.gnome-online-accounts.enable = true;
-    programs.dconf.enable = true;
+    programs.dux-calendar = {
+      enable = true;
+      systemd.enable = true;
+    };
 
     services.gnome.gnome-keyring.enable = true;
     security.pam.services.greetd.enableGnomeKeyring = false;
 
     environment.systemPackages = with pkgs; [
-      dux-search
       vulkan-hdr-layer-kwin6
     ];
   };

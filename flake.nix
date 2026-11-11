@@ -34,7 +34,6 @@
 
     dms.url = "github:AvengeMedia/DankMaterialShell/stable";
     dank-greeter.url = "github:AvengeMedia/dank-greeter";
-    dsearch.url = "github:AvengeMedia/danksearch";
     quickshell = {
       url = "git+https://git.outfoxxed.me/quickshell/quickshell";
       inputs.nixpkgs.follows = "nixpkgs";
