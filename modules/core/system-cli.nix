@@ -17,6 +17,7 @@
       vim
       ripgrep
       ripgrep-all
+      ast-grep
       bat
       slurm
       util-linux
