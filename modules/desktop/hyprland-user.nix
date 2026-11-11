@@ -49,6 +49,7 @@
       background_opacity = "0.8";
       hide_window_decorations = "yes";
       dynamic_background_opacity = "yes";
+      remember_window_size = "no";
 
       cursor_shape = "block";
       cursor_blink_interval = 1;
