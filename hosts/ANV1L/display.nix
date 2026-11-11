@@ -28,7 +28,7 @@
       output "DP-1" {
           mode "1920x1080@60"
           position x=0 y=1210
-          transform "270"
+          transform "90"
           scale 1.0
       }
 
@@ -50,7 +50,7 @@
       output "HDMI-A-1" {
           mode "1920x1080@60"
           position x=4520 y=1210
-          transform "90"
+          transform "270"
           scale 1.0
       }
 

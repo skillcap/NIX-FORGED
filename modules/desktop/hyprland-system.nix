@@ -15,8 +15,8 @@
       xwayland.enable = true;
     };
 
-    # Dank Material Shell Ecosystem
-    programs.dms-shell = {
+    # Dux Shell Ecosystem (renamed from DMS in nixpkgs 26.11)
+    programs.dux-shell = {
       enable = true;
       quickshell.package = inputs.quickshell.packages.${pkgs.stdenv.hostPlatform.system}.quickshell;
 
@@ -26,8 +26,8 @@
       };
     };
 
-    # DankSearch
-    programs.dsearch.enable = true;
+    # Dux Search
+    programs.dux-search.enable = true;
 
     # DMS Greeter
     services.displayManager.defaultSession = "hyprland-uwsm";
@@ -50,7 +50,7 @@
     security.pam.services.greetd.enableGnomeKeyring = false;
 
     environment.systemPackages = with pkgs; [
-      dsearch
+      dux-search
       vulkan-hdr-layer-kwin6
     ];
   };
