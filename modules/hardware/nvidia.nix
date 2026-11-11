@@ -15,21 +15,19 @@
   config = lib.mkIf config.modules.hardware.nvidia.enable {
     # --- Driver & Graphics Support ---
     services.xserver.videoDrivers = [ "nvidia" ];
-    services.xserver.deviceSection = ''
-      Option "Coolbits" "31"
-    '';
 
     hardware.graphics = {
       enable = true;
+      enable32Bit = true;
       extraPackages =
         let
-          dxvk-nvapi-reflex-layer = pkgs.stdenv.mkDerivation rec {
+          dxvk-nvapi-reflex-layer = pkgs.stdenv.mkDerivation {
             pname = "dxvk-nvapi-reflex";
-            version = "0.9.2";
+            version = "0.9.3";
 
             src = pkgs.fetchurl {
-              url = "https://github.com/jp7677/dxvk-nvapi/releases/download/v${version}/dxvk-nvapi-v${version}.tar.gz";
-              sha256 = "60c284223530d643c446c263f1e1a96c6de7b5ff21796219646da734d97a70d6";
+              url = "https://github.com/jp7677/dxvk-nvapi/releases/download/v0.9.3/dxvk-nvapi-v0.9.3.tar.gz";
+              sha256 = "284033c38e463ba31d40466d650d0c411df6f64bbf8ed3d19c9ca0cadf31dfd3";
             };
 
             sourceRoot = ".";
@@ -46,6 +44,7 @@
         in
         [
           dxvk-nvapi-reflex-layer
+          pkgs.nvidia-vaapi-driver
         ];
     };
 
@@ -53,29 +52,26 @@
     hardware.nvidia = {
       open = true;
       package = config.boot.kernelPackages.nvidiaPackages.beta;
-      # package = config.boot.kernelPackages.nvidiaPackages.beta.overrideAttrs (old: {
-      #   patches = (old.patches or []) ++ [
-      #     "${inputs.cachyos-pkgbuilds}/nvidia/nvidia-utils/<TARGET_KERNEL_PATCH>.patch"
-      #   ];
-      # });
       modesetting.enable = true;
       powerManagement.enable = true;
-      nvidiaSettings = true;
-      powerManagement.finegrained = false; # maybe remove for laptops
+      powerManagement.finegrained = false;
+      nvidiaSettings = false;
     };
+
     boot.extraModprobeConfig = ''
-      options nvidia NVreg_EnableGpuFirmware=1
-      options nvidia NVreg_PreserveVideoMemoryAllocations=1
+      options nvidia NVreg_InitializeSystemMemoryAllocations=0
+      options nvidia NVreg_TemporaryFilePath=/var/tmp
     '';
 
     # --- Session & Wayland Variables ---
     environment.sessionVariables = {
       NVIDIA_VARIANT = "open";
       LIBVA_DRIVER_NAME = "nvidia";
-      GBM_BACKEND = "nvidia-drm";
       __GLX_VENDOR_LIBRARY_NAME = "nvidia";
       __GL_SHADER_DISK_CACHE_SKIP_CLEANUP = "1";
       __GL_SHADER_DISK_CACHE_SIZE = "42949672960"; # 40GB in bytes
+      DXVK_NVAPI_VKREFLEX = "1";
+      PROTON_ENABLE_NVAPI = "1";
       NIXOS_OZONE_WL = "1";
       MOZ_ENABLE_WAYLAND = "1";
       NVD_BACKEND = "direct";
@@ -83,7 +79,7 @@
 
     # --- Utils ---
     environment.systemPackages = with pkgs; [
-      nvtopPackages.nvidia # Monitoring
+      nvtopPackages.nvidia
     ];
   };
 }
