@@ -1,7 +1,7 @@
 { pkgs, ... }:
 
 {
-  home.packages = [ pkgs.opencode ];
+  home.packages = [ pkgs.opencode pkgs.pi-coding-agent ];
   services.ollama = {
     enable = true;
     package = pkgs.ollama-cuda;
