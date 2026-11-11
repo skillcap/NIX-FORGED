@@ -2,7 +2,13 @@
   description = "ANV1L NixOS Configuration";
 
   inputs = {
-    nixpkgs.url = "github:nixos/nixpkgs/nixos-unstable";
+    # TEMPORARY PIN: the Nix registry visible on these machines resolves
+    # nixos-unstable to f4a03c0 (2026-11-07), whose rusty-man expression
+    # is broken under the new cargo hook. The fix landed one day later:
+    # https://github.com/NixOS/nixpkgs/commit/492f34b4a3e08b8627fc370ae100cc14a67e50d5
+    # Remove this pin (back to "nixos/nixpkgs/nixos-unstable") once
+    # `nix flake update nixpkgs` can reach commits newer than 2026-11-07.
+    nixpkgs.url = "github:nixos/nixpkgs/492f34b4a3e08b8627fc370ae100cc14a67e50d5";
     disko.url = "github:nix-community/disko";
     nix-gaming.url = "github:fufexan/nix-gaming";
     nix-cachyos-kernel.url = "github:xddxdd/nix-cachyos-kernel";
