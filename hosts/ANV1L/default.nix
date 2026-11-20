@@ -15,7 +15,6 @@
     allowUnfree = true;
   };
 
-  # AI tooling: opencode (pre-built) + local CUDA Ollama inference on the GPU box.
   modules.services.ai = {
     enable = true;
     localLlm = {
