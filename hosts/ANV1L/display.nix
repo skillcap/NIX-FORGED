@@ -34,7 +34,7 @@
 
       // --- Center Ultrawide (DP-3) ---
       output "DP-3" {
-          mode "3440x1440@175"
+          mode "3440x1440@360"
           position x=1080 y=1440
           scale 1.0
       }

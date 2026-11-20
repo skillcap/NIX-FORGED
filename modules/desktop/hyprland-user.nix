@@ -66,7 +66,7 @@
 
       # feels nice, but remove to save power on laptops
       input_delay = 1;
-      repaint_delay = 5;
+      repaint_delay = 3;
       sync_to_monitor = "yes";
 
       allow_remote_control = "yes";

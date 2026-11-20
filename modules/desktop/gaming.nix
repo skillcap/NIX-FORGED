@@ -1,7 +1,7 @@
 { pkgs, lib, config, ... }:
 
 let
-  mangoConfig = "position=top-left,toggle_hud=bracketright,fps,frametime,cpu_temp,gpu_temp,vram,ram,core_bars,no_display,fps_limit=173,fps_limit_method=late";
+  mangoConfig = "position=top-left,toggle_hud=bracketright,fps,frametime,cpu_temp,gpu_temp,vram,ram,core_bars,no_display,fps_limit=355,fps_limit_method=late";
 
   # Core optimizations and 9950X3D CCD0 (3D V-Cache) topology
   baseEnv = ''

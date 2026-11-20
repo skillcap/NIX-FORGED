@@ -26,7 +26,7 @@
 
       [Environment]
       MANGOHUD=1
-      MANGOHUD_CONFIG=position=top-left,toggle_hud=bracketright,fps,frametime,cpu_temp,gpu_temp,vram,ram,core_bars,no_display,fps_limit=173,fps_limit_method=late
+      MANGOHUD_CONFIG=position=top-left,toggle_hud=bracketright,fps,frametime,cpu_temp,gpu_temp,vram,ram,core_bars,no_display,fps_limit=355,fps_limit_method=late
     '';
   };
 
