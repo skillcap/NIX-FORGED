@@ -8,6 +8,7 @@
 
 let
   cfg = config.modules.core.boot;
+  cachyHelpers = pkgs.callPackage "${inputs.nix-cachyos-kernel.outPath}/helpers.nix" { };
 in
 {
   options.modules.core.boot = {
@@ -38,6 +39,7 @@ in
         "generic"
         "zen3"
         "zen4"
+        "zen5"
       ];
       default = "generic";
       description = "Specific microarchitecture for pulling optimized pre-compiled kernels.";
@@ -66,10 +68,12 @@ in
             max-substitution-jobs = 128;
             substituters = [
               "https://cache.nixos.org?priority=10"
-              "https://attic.xuyh0120.win/lantian" # Precompiled CachyOS Kernel Cache
+              "https://cache.lantian.pub/lantian"
+              "https://cache.xinux.uz"
             ];
             trusted-public-keys = [
-              "lantian:EeAUQ+W+6r7EtwnmYjeVwx5kOGEBpjlBfPlzGlTNvHc="
+              "lantian:WVGO7vsRMSEN+h7Lp7kv6SAmrkEXgUGbbXm7jMDjBuQ="
+              "cache.xinux.uz:BXCrtqejFjWzWEB9YuGB7X2MV4ttBur1N8BkwQRdH+0="
             ];
           };
         };
@@ -81,26 +85,24 @@ in
           pkiBundle = "/var/lib/sbctl";
         };
         boot.loader.efi.canTouchEfiVariables = true;
-        # boot.initrd.systemd.enable = true;
         boot.loader.timeout = 1;
 
         # --- Base Kernel Params ---
         boot.kernelParams = [
-          # --- System Latency ---
-          "split_lock_detect=off" # Prevent stutters in unoptimized software
-          "transparent_hugepage=madvise" # Faster memory pages for large assets on request
-          "tsc=reliable" # to improve cross-system latency
-          "clocksource=tsc" # in conjunction with above
+          "split_lock_detect=off"
+          "transparent_hugepage=madvise"
+          "tsc=reliable"
+          "clocksource=tsc"
         ];
 
         boot.kernel.sysctl = {
-          "vm.vfs_cache_pressure" = 50; # Hold onto metadata longer
-          "vm.page_lock_unfairness" = 1; # tldr, improves system latency
-          # networking
+          "vm.vfs_cache_pressure" = 50;
+          "vm.page_lock_unfairness" = 1;
           "net.core.default_qdisc" = "fq";
           "net.ipv4.tcp_congestion_control" = "bbr";
-          "net.ipv4.tcp_fastopen" = 3; # Speeds up repeated connections
+          "net.ipv4.tcp_fastopen" = 3;
         };
+
         boot.kernelModules = [
           "tcp_bbr"
           "ntsync"
@@ -113,38 +115,49 @@ in
             pkgs.linuxPackages_hardened
           else
             let
-              kernelSuffix =
+              # CachyOS uses the -zen4 package target for both Zen 4 and Zen 5 CPUs
+              archSuffix =
                 if cfg.cpuOptimization == "generic" then
                   ""
+                else if (cfg.cpuOptimization == "zen4" || cfg.cpuOptimization == "zen5") then
+                  "-zen4"
                 else
                   "-${cfg.cpuOptimization}";
 
+              marchFlag =
+                if cfg.cpuOptimization == "zen5" then
+                  "znver5"
+                else
+                  "native";
+
               rawKernel =
-                inputs.nix-cachyos-kernel.packages.${pkgs.stdenv.hostPlatform.system}."linux-cachyos-${cfg.kernelBranch}${kernelSuffix}";
+                inputs.nix-cachyos-kernel.packages.${pkgs.stdenv.hostPlatform.system}."linux-cachyos-${cfg.kernelBranch}-lto${archSuffix}";
 
               optimizedKernel = rawKernel.overrideAttrs (old: {
                 modDirVersion = "${old.version}-cachyos-custom";
                 NIX_ENFORCE_NO_NATIVE = 0;
                 preConfigure = (old.preConfigure or "") + ''
-                  export KCFLAGS="$KCFLAGS -march=native -O3 -pipe"
-                  export KCPPFLAGS="$KCPPFLAGS -march=native -O3 -pipe"
+                  export KCFLAGS="$KCFLAGS -march=${marchFlag} -O3 -pipe"
+                  export KCPPFLAGS="$KCPPFLAGS -march=${marchFlag} -O3 -pipe"
                 '';
                 separateDebugInfo = false;
               });
             in
-            pkgs.linuxPackagesFor (if cfg.compileLocally then optimizedKernel else rawKernel);
+            if cfg.compileLocally then
+              cachyHelpers.kernelModuleLLVMOverride (pkgs.linuxKernel.packagesFor optimizedKernel)
+            else
+              inputs.nix-cachyos-kernel.legacyPackages.${pkgs.stdenv.hostPlatform.system}."linuxPackages-cachyos-${cfg.kernelBranch}-lto${archSuffix}";
 
-        # --- AppImage Support ---
+        # --- AppImage & Flatpak Support ---
         programs.appimage = {
           enable = true;
           binfmt = true;
         };
-        # --- Flatpak Support ---
         services.flatpak.enable = true;
         xdg.portal.enable = true;
 
         environment.systemPackages = with pkgs; [
-          sbctl # Secure boot management
+          sbctl
         ];
 
         # --- Reduce Reboot Delays ---
@@ -173,31 +186,34 @@ in
           "nvidia-drm.fbdev=1"
         ];
 
-        # Apply 7.2 DRM compatibility patch when running latest kernel stream
+        # Override the .open sub-attribute on nvidiaPackages.beta when using the 7.2+ latest branch
         hardware.nvidia.package = lib.mkIf (cfg.kernelBranch == "latest") (
-          config.boot.kernelPackages.nvidiaPackages.open.overrideAttrs (old: {
-            patches = (old.patches or [ ]) ++ [
-              ../../patches/nvidia-kernel-7.2.patch
-            ];
-          })
+          let
+            baseNvidia = config.boot.kernelPackages.nvidiaPackages.beta;
+          in
+          lib.mkForce (
+            baseNvidia
+            // {
+              open = baseNvidia.open.overrideAttrs (old: {
+                patches = (old.patches or [ ]) ++ [
+                  (pkgs.fetchpatch {
+                    url = "https://raw.githubusercontent.com/CachyOS/CachyOS-PKGBUILDS/master/nvidia/nvidia-utils/0001-make-Add-support-for-7.2-Kernel.patch";
+                    hash = "sha256-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA="; # Replace via nix-prefetch-url if switching to latest
+                  })
+                ];
+              });
+            }
+          )
         );
       })
 
       # --- Large Memory Optimizations ---
       (lib.mkIf cfg.largeMemory {
-        # --- Memory Management & Compression ---
-        # Dynamic RAM disk for tempfiles, remove/reduce for systems with less RAM.
-        # Saves on SSD writes.
         boot.tmp = {
           useTmpfs = true;
-          tmpfsSize = "67%"; # ~64GB before compression
+          tmpfsSize = "67%";
         };
 
-        # zstd hits a 1:3 ratio, lz4 hits 1:2 with better performance.
-        # For my system:
-        # zstd: 96->~192gb @ ~3-5% potential penalty
-        # lz4: 96->~144gb @ ~0.5-1.5% potential penalty
-        # Find what works best for your needs.
         zramSwap = {
           enable = true;
           algorithm = "lz4";
@@ -205,18 +221,23 @@ in
         };
 
         boot.kernel.sysctl = {
-          "vm.swappiness" = 180; # zram is fast
+          "vm.swappiness" = 180;
           "vm.watermark_boost_factor" = 0;
           "vm.watermark_scale_factor" = 125;
+          "vm.dirty_bytes" = 268435456; # 256MB cap before async writeback
+          "vm.dirty_background_bytes" = 67108864; # 64MB background writeback trigger
         };
       })
 
       # --- CPU Vendor Matching ---
       (lib.mkIf (cfg.cpuVendor == "amd") {
         boot.kernelParams = [
-          # --- CPU Optimization ---
-          "amd_pstate=active" # Let the CPU manage its own frequency
-          "initcall_blacklist=acpi_cpufreq_init" # Prevent conflicts with old driver
+          "amd_pstate=active"
+          "initcall_blacklist=acpi_cpufreq_init"
+        ];
+
+        boot.kernelModules = lib.optionals (cfg.cpuOptimization == "zen4" || cfg.cpuOptimization == "zen5") [
+          "amd_3d_vcache"
         ];
       })
 
@@ -229,23 +250,25 @@ in
       # --- Profile Matching ---
       (lib.mkIf (config.host.profile == "desktop") {
         boot.kernelParams = [
-          "nowatchdog" # Disable the kernel watchdog
-          "nmi_watchdog=0" # Disable Non-Maskable Interrupt watchdog
-          "nosoftlockup" # Disable soft lockup detector to remove polling jitter
-          "preempt=full" # Force kernel to instantly interrupt background tasks
-          "threadirqs" # Push hardware interrupts to threads to prevent audio dropouts
-          "skew_tick=1" # Offset timer ticks across cores to reduce lock contention
-          "workqueue.power_efficient=false" # Prevent thread migration across cores to preserve
+          "nowatchdog"
+          "nmi_watchdog=0"
+          "nosoftlockup"
+          "preempt=full"
+          "threadirqs"
+          "skew_tick=1"
+          "workqueue.power_efficient=false"
         ]
         ++ lib.optionals (cfg.cpuVendor == "amd") [
-          "amd_pstate.epp=performance" # Bias the CPU toward maximum performance over power savings
+          "amd_pstate.epp=performance"
         ];
 
         boot.kernel.sysctl = {
-          "vm.compaction_proactiveness" = 0; # Reduces random cpu spikes from memory defragmentation
+          "vm.compaction_proactiveness" = 0;
         };
 
-        powerManagement.cpuFreqGovernor = "performance";
+        # Use powersave governor when amd_pstate=active is enabled so EPP controls per-core boost
+        powerManagement.cpuFreqGovernor =
+          if cfg.cpuVendor == "amd" then "powersave" else "performance";
       })
 
       (lib.mkIf (config.host.profile == "laptop") {
