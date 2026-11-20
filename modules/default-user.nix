@@ -10,7 +10,6 @@
     ./development/kubernetes.nix
     ./development/tools.nix
     ./security/secrets.nix
-    ./services/ai.nix
     ./services/rclone.nix
   ];
 }

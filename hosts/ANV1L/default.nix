@@ -15,6 +15,15 @@
     allowUnfree = true;
   };
 
+  # AI tooling: opencode (pre-built) + local CUDA Ollama inference on the GPU box.
+  modules.services.ai = {
+    enable = true;
+    localLlm = {
+      enable = true;
+      acceleration = "cuda";
+    };
+  };
+
   # --- Networking & Time ---
   networking.hostName = "ANV1L";
   networking.networkmanager.enable = true;

@@ -11,7 +11,11 @@
     nixpkgs.url = "github:nixos/nixpkgs/492f34b4a3e08b8627fc370ae100cc14a67e50d5";
     disko.url = "github:nix-community/disko";
     nix-gaming.url = "github:fufexan/nix-gaming";
-    nix-cachyos-kernel.url = "github:xddxdd/nix-cachyos-kernel";
+    # CI-cached release branch for the pre-compiled kernel.
+    # Do NOT add `inputs.nixpkgs.follows`: it breaks the derivation hash and misses the cache.
+    nix-cachyos-kernel.url = "github:xddxdd/nix-cachyos-kernel/release";
+    # Pre-built LLM agent binaries (opencode). No `inputs.nixpkgs.follows`.
+    llm-agents.url = "github:numtide/llm-agents.nix";
     sops-nix.url = "github:Mic92/sops-nix";
 
     home-manager = {

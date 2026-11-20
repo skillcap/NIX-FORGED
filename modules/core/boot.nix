@@ -62,18 +62,21 @@ in
               "flakes"
             ];
             auto-optimise-store = true;
-            cores = 0;
-            max-jobs = "auto";
+            # Throttle the laptop's local builds to avoid OOM; other profiles stay unlimited.
+            cores = if config.host.profile == "laptop" then 4 else 0;
+            max-jobs = if config.host.profile == "laptop" then 1 else "auto";
             http-connections = 128;
             max-substitution-jobs = 128;
             substituters = [
               "https://cache.nixos.org?priority=10"
               "https://cache.lantian.pub/lantian"
               "https://cache.xinux.uz"
+              "https://cache.numtide.com"
             ];
             trusted-public-keys = [
               "lantian:WVGO7vsRMSEN+h7Lp7kv6SAmrkEXgUGbbXm7jMDjBuQ="
               "cache.xinux.uz:BXCrtqejFjWzWEB9YuGB7X2MV4ttBur1N8BkwQRdH+0="
+              "niks3.numtide.com-1:DTx8wZduET09hRmMtKdQDxNNthLQETkc/yaX7M4qK0g="
             ];
           };
         };
@@ -280,6 +283,13 @@ in
         ];
 
         powerManagement.cpuFreqGovernor = "powersave";
+
+        # mkDefault so the largeMemory block can still win on a laptop if ever enabled.
+        zramSwap = {
+          enable = lib.mkDefault true;
+          algorithm = lib.mkDefault "lz4";
+          memoryPercent = lib.mkDefault 100;
+        };
       })
 
       (lib.mkIf (config.host.profile == "server") {

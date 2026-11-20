@@ -9,10 +9,24 @@
   ];
 
   host.profile = "laptop";
-  modules.core.boot.cpuVendor = "intel";
-  modules.core.boot.cpuOptimization = "generic";
-  modules.core.boot.compileLocally = false;
+  modules.core.boot = {
+    enable = true;
+    cpuVendor = "intel";
+    cpuOptimization = "generic";
+    kernelBranch = "lts";
+    compileLocally = false;
+    largeMemory = false;
+  };
   nixpkgs.config.allowUnfree = true;
+
+  # opencode (pre-built) stays available; local Ollama is disabled so nothing LLM-related builds.
+  modules.services.ai = {
+    enable = true;
+    localLlm = {
+      enable = false;    # set to true, acceleration "cpu", for cached CPU Ollama
+      acceleration = "cpu";
+    };
+  };
 
   # --- Networking & Time ---
   networking.hostName = "N0M4D";

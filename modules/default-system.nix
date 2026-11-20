@@ -8,6 +8,7 @@
     ./desktop/gaming.nix
     ./desktop/hyprland-system.nix
     ./development/podman.nix
+    ./services/ai.nix
     ./hardware/audio.nix
     ./hardware/nvidia.nix
     ./hardware/RTX-5090-OC.nix
